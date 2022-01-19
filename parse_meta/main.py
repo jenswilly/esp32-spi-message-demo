@@ -21,10 +21,14 @@ nn1.setBlobPath(str(blobconverter.from_zoo('mobilenet-ssd', shaves=6, version='2
 
 # set up color camera and link to NN node
 colorCam = pipeline.create(dai.node.ColorCamera)
+
+previewOut = pipeline.create(dai.node.XLinkOut)
+previewOut.setStreamName("preview")
+
 colorCam.setPreviewSize(300, 300)
 colorCam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
 colorCam.setInterleaved(False)
-colorCam.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR)
+colorCam.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
 colorCam.preview.link(nn1.input)
 
 # set up SPI out node and link to nn1
@@ -35,7 +39,17 @@ spiOut.input.setBlocking(False)
 spiOut.input.setQueueSize(2)
 nn1.out.link(spiOut.input)
 
+colorCam.preview.link(previewOut.input)
 
 with dai.Device(pipeline) as device:
-    while not device.isClosed():
-        time.sleep(1)
+#    while not device.isClosed():
+#        time.sleep(1)
+
+    previewQueue = device.getOutputQueue(name="preview", maxSize=4, blocking=False)
+
+    while True:
+        inRgb = previewQueue.get()
+        cv2.imshow("rgb", inRgb.getCvFrame())
+
+        if cv2.waitKey(1) == ord('q'):
+            break
