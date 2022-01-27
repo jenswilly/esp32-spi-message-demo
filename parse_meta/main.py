@@ -120,16 +120,15 @@ def overlap_ratio(a, b):
 
 def flash_bootloader():
     """Flash device bootloader to first available device."""
-    (found, bl) = dai.DeviceBootloader.getFirstAvailableDevice()
+    (found, info) = dai.DeviceBootloader.getFirstAvailableDevice()
+    if not found:
+        print("No device found...")
+        return
 
-    if found:
-        bootloader = dai.DeviceBootloader(bl)
+    with dai.DeviceBootloader(info, allowFlashingBootloader=True) as bootloader:
         print(bootloader.getVersion())
-
         progress = lambda p : print(f'Flashing progress: {p*100:.1f}%')
         bootloader.flashBootloader(progress)
-    else:
-        print("No device found...")
 
 def flash_image():
     """Flash pipeline to first available device."""
@@ -234,14 +233,16 @@ def run_pipeline():
 # Main entry point
 if(len(sys.argv) >= 2 and sys.argv[1] == "bootloader"):
     print("Flashing bootloader")
-    # flash_bootloader()
+    flash_bootloader()
 elif(len(sys.argv) >= 2 and sys.argv[1] == "save"):
     filename = "pipeline.dap"
     print("Saving pipeline to disk as " + filename)
     write_image_to_file(filename)
 elif(len(sys.argv) >= 2 and sys.argv[1] == "flash"):
     print("Flashing pipeline")
-    # flash_image()
+    flash_image()
 else:
-    print("Run pipeline")
+    print("Running pipeline")
     run_pipeline()
+
+print("Done...")
