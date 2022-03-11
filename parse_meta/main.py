@@ -45,7 +45,7 @@ def create_pipeline():
 
     # set up color camera and link to NN node
     colorCam = pipeline.create(dai.node.ColorCamera)
-    colorCam.setVideoSize(640,360)
+    colorCam.setVideoSize(1024, 576)
     colorCam.setPreviewSize(300, 300)
     colorCam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
     colorCam.setInterleaved(False)
@@ -75,13 +75,18 @@ def create_pipeline():
     spioutPreview.input.setBlocking(False)
     spioutPreview.input.setQueueSize(1)
 
+    # ImageManip that will crop the frame before sending it to the Face detection NN node
+#    imageManip = pipeline.create(dai.node.ImageManip)
+#    imageManip.initialConfig.setResize(304, 304)
+#    imageManip.initialConfig.setFrameType(dai.RawImgFrame.Type.RGB888p)
+
     # VideoEncoder
     videoEnc = pipeline.create(dai.node.VideoEncoder)
-    videoEnc.setDefaultProfilePreset(640, 360, 30, dai.VideoEncoderProperties.Profile.MJPEG);
+    videoEnc.setDefaultProfilePreset(1024, 576, 1, dai.VideoEncoderProperties.Profile.MJPEG);
 
     # Link outputs
     colorCam.video.link(videoEnc.input);
-    videoEnc.bitstream.link(spioutPreview.input);
+    videoEnc.bitstream.link(spioutPreview.input)
     colorCam.preview.link(previewOut.input)
     nn1.out.link(spiOut.input)
     nn1.out.link(nnOut.input)
