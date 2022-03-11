@@ -45,6 +45,11 @@ def create_pipeline():
 
     # set up color camera and link to NN node
     colorCam = pipeline.create(dai.node.ColorCamera)
+    colorCam.setVideoSize(640,360)
+    colorCam.setPreviewSize(300, 300)
+    colorCam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
+    colorCam.setInterleaved(False)
+    colorCam.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
 
     # XLinkOut node for RGB image out
     previewOut = pipeline.create(dai.node.XLinkOut)
@@ -54,10 +59,6 @@ def create_pipeline():
     nnOut = pipeline.create(dai.node.XLinkOut)
     nnOut.setStreamName("nn")
 
-    colorCam.setPreviewSize(300, 300)
-    colorCam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
-    colorCam.setInterleaved(False)
-    colorCam.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
     colorCam.preview.link(nn1.input)
 
     # set up SPI out node
@@ -67,7 +68,20 @@ def create_pipeline():
     spiOut.input.setBlocking(False)
     spiOut.input.setQueueSize(2)
 
+    # SPI out node for JPG stream
+    spioutPreview = pipeline.create(dai.node.SPIOut)
+    spioutPreview.setStreamName("spipreview");
+    spioutPreview.setBusId(0);
+    spioutPreview.input.setBlocking(False)
+    spioutPreview.input.setQueueSize(1)
+
+    # VideoEncoder
+    videoEnc = pipeline.create(dai.node.VideoEncoder)
+    videoEnc.setDefaultProfilePreset(640, 360, 30, dai.VideoEncoderProperties.Profile.MJPEG);
+
     # Link outputs
+    colorCam.video.link(videoEnc.input);
+    videoEnc.bitstream.link(spioutPreview.input);
     colorCam.preview.link(previewOut.input)
     nn1.out.link(spiOut.input)
     nn1.out.link(nnOut.input)
