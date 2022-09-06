@@ -189,7 +189,7 @@ def run_pipeline():
             overlay = frame.copy()  # For drawing semi-transparent overlaps
             for detection in detections:
                 # Ignore if not one of the "approved" categories
-                if not detection.label in [7]:
+                if not detection.label in [7, 15]:
                     continue
 
                 bbox = frame_norm(frame, (detection.xmin, detection.ymin, detection.xmax, detection.ymax))
